@@ -1,0 +1,96 @@
+/**
+ * @file main.c
+ * @author Patrycja Nazim
+ * @date January 2024
+ * @brief File containing the main function.
+ * @ver 0.1
+ */
+#include "MKL05Z4.h"
+#include "frdm_bsp.h"
+#include "led.h"
+#include "lcd1602.h"
+#define RED_LED_POS 8 
+#define BUTTON_POS 1
+#define BUZZER_POS 13
+
+/**
+ * @brief The interupt function
+ *
+ * @return NULL
+ */
+
+void PORTB_IRQHandler(void) {
+        if (PORTB->ISFR & (1 << BUTTON_POS)) {  // Check if interrupt is from Button Pin
+        if ((FPTB->PDIR & (1 << BUTTON_POS)) == 0) {  // Button is pressed
+            PTB->PCOR = (1 << RED_LED_POS);  // Turn ON the LED (active low)
+				  	PTB->PSOR = (1 << BUZZER_POS);  // Turn OFF Buzzer (Button Released)
+
+        } else {  // Button is released
+            PTB->PSOR = (1 << RED_LED_POS);  // Turn OFF the LED (active low)
+					  PTB->PCOR = (1 << BUZZER_POS);  // Turn ON Buzzer (Button Pressed)
+        }
+        PORTB->ISFR = (1 << BUTTON_POS);  // Clear the interrupt flag
+    }
+}
+
+/**
+ * @brief The main loop.
+ *
+ * @return NULL
+ */
+
+int main (void) {
+	__enable_irq();
+	
+	    // Configure PORTB Pin 9 for Buzzer
+    SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;       // Enable clock for GPIO B
+    PORTB->PCR[BUZZER_POS] |= PORT_PCR_MUX(1); // Set Pin 9 as GPIO
+    PTB->PDDR |= (1 << BUZZER_POS);           // Set Pin 9 as output
+    PTB->PCOR = (1 << BUZZER_POS);            // Ensure Buzzer is OFF initially
+	
+	
+	// configure portb pin 8 as red led output
+	SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK; /* Enable clock for GPIO B */ 
+ 	PORTB->PCR[RED_LED_POS] |= PORT_PCR_MUX(1);  /* MUX config. Set Pin 8 of PORT B as GPIO */  	 
+ 	PTB->PDDR |= (1 << RED_LED_POS); /* Set pin 8 of GPIO B as output */ 
+	PTB->PSOR |= (1 << RED_LED_POS); /* Turn off RED LED */ // led is active low 
+
+	// configure portb pin 13 as button input
+
+ 	PORTB->PCR[BUTTON_POS] |= PORT_PCR_MUX(1)| PORT_PCR_PE_MASK | PORT_PCR_PS_MASK | PORT_PCR_IRQC(0xB);  /* MUX config. Set Pin 13 of PORT B as GPIO, interrupt on falling edge */  	 
+ 	PTB->PDDR &= ~(1UL << BUTTON_POS); /* Set pin 13 of GPIO B as input */ 
+	NVIC_ClearPendingIRQ(31);
+	NVIC_EnableIRQ(31);
+	NVIC_SetPriority(31, 0);
+	
+	
+		
+
+ LCD1602_Init(); /* initialize all LEDs */
+ LCD1602_Backlight(TRUE);
+
+ LCD1602_SetCursor(1,0);
+ LCD1602_Print("MORSE CODE");
+ LCD1602_SetCursor(3,1);
+ LCD1602_Print("DECODER");
+
+ DELAY(2000);
+	
+ LCD1602_ClearAll();
+ LCD1602_SetCursor(0,0);
+ LCD1602_Print("START ENCODING:");
+
+
+
+
+
+ while(1){
+			//if( ( PTA->PDIR & (1<<BUTTON_POS) ) ==0 ){ /* Test if button pressed */
+		//	PTB->PTOR|=(1<<RED_LED_POS); /* Toggle RED LED */
+		//	while( ( PTA->PDIR & (1<<BUTTON_POS) ) == 0 ) /* Wait for release */
+		//	DELAY(100); /* Debouncing */
+// }
+	 
+	  
+			}
+};
